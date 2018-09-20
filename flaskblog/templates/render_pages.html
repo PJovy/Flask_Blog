@@ -1,0 +1,15 @@
+{% macro render_pagination(pagination, endpoint) %}
+    <ul class="pagination pagination-large">
+      <li><a href="#">&laquo;</a></li>
+      {% for page_num in pagination.iter_pages(right_current=2, left_current=1, left_edge=1, right_edge=1) %}
+        {% if page_num == pagination.page %}
+          <li><a class="btn btn-info m-1" href="{{ url_for('home', page=page_num) }}">{{ page_num }}</a></li>
+        {% elif page_num != None %}
+          <li><a class="btn btn-outline-secondary m-1" href="{{ url_for('home', page=page_num) }}">{{ page_num }}</a></li>
+        {% else %}
+          <li><a class="btn btn-outline-secondary m-1" href="#">...</a></li>
+        {% endif %}
+      {% endfor %}
+      <li><a href="#">&raquo;</a></li>
+    </ul>
+{% endmacro %}
