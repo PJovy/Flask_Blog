@@ -1,6 +1,8 @@
-from flaskblog import db, login_manager
+from flaskblog import db, login_manager, app
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from datetime import datetime
 from flask_login import UserMixin
+
 
 # we import login_manager here cause it will handle all of the sessions in
 # background. The extension has to know how to find one of your users by ID.
@@ -24,12 +26,25 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     image_file = db.Column(db.String(20), nullable=False, default='default.jpg')
     password = db.Column(db.String(60), nullable=False)
-# the user model are actually referencing the post class, so we use uppercase 'P'
-# the posts attribute is not actually a column itself.That is actually running an
-# additional query on the post table the grabs any post from that user.
+    # the user model are actually referencing the post class, so we use uppercase 'P'
+    # the posts attribute is not actually a column itself.That is actually running an
+    # additional query on the post table the grabs any post from that user.
     posts = db.relationship('Post', backref='author', lazy='dynamic')
 
-# Magic method, it specify how it print when we print the object out.
+    def get_reset_token(self, expires_sec=1800):
+        s = Serializer(app.config['SECRET_KEY'], expires_sec)
+        return s.dumps({'user_id': self.id}).decode('utf-8')
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return User.query.get(user_id)
+
+    # Magic method, it specify how it print when we print the object out.
     def __repr__(self):
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
 
@@ -39,10 +54,8 @@ class Post(db.Model):
     title = db.Column(db.String(100), nullable=False)
     date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
     content = db.Column(db.Text, nullable=False)
-# the foreign key referencing the table name and the column name,so it's use lower case.
+    # the foreign key referencing the table name and the column name,so it's use lower case.
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
-
 
     def __repr__(self):
         return f"Post('{self.title}', '{self.date_posted}')"
