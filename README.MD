@@ -1,3 +1,3 @@
-# This is a Blog Flask APP
+# This is a Flask Blog APP
 
 - author: Jovy
